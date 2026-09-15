@@ -85,6 +85,43 @@ flowchart LR
    S --> P
 ```
 
+```mermaid
+flowchart TD
+  T[Agent task decision] --> P[One TaskPolicy]
+  P -->|decision_authority: full| D[DecisionResolver]
+  P -->|decision_authority: low| L[Learned softmax policy]
+  D --> C{Unique robust winner?}
+  C -->|yes| A[Selected policy action]
+  C -->|tie| H[User accept or reject]
+  L --> F[User feedback or observable outcome]
+  H --> A
+  F --> A
+  A --> E[Episode on the same policy lineage]
+  E --> S[Score and optionally train]
+  S --> P
+```
+
+```mermaid
+flowchart TD
+  T[Agent task decision] --> P[One TaskPolicy]
+  P -->|decision_authority: full| D[Resolve the current DecisionFrame]
+  D --> C{Unique robust winner?}
+  C -->|yes| A[Selected policy action]
+  C -->|no| H[Current-decision tie-break]
+  H -->|accept proposed tied action| A
+  H -->|reject| N[Propose next tied action or reframe]
+  N --> H
+
+  P -->|decision_authority: low| L[Select from learned softmax probabilities]
+  L --> F[Learning/authorization feedback]
+  F -->|accept, reject, or observable outcome| A
+
+  A --> E[Episode on the same policy lineage]
+  E --> S[Score the observed outcome]
+  S -->|low authority: optionally train| P
+  S -->|full authority: audit only| P
+```
+
   ### Entity relationship model
 
   The following model combines logical SDK identities, durable records, runtime
